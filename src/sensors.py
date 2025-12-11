@@ -5,43 +5,43 @@ class Led:
     def __init__(self,pin, freq=5000, on_duty=256):
         self.pin = PWM(Pin(pin, Pin.OUT),freq=freq,duty_u16=0)
         self.on_duty = on_duty
-        
+
     def duty(self, duty):
         self.pin.duty(duty)
-        
+
     def on(self):
         self.duty(self.on_duty)
-        
+
     def off(self):
         self.duty(0)
-        
+
     def toggle(self):
         if self.pin.duty() > 0:
             self.off()
         else:
             self.on()
-        
+
 class Button:
     def button_event(self, b):
         curr = utime.ticks_ms()
         delay = utime.ticks_diff(curr, self.time_sv)
-    
+
         if delay < self.bounce:
             return
-    
+
         self.time_sv = curr
-    
+
         self.f(b)
-    
-        
+
+
     def __init__(self, pin, f, bounce=200, trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING):
         self.pin = Pin(pin, Pin.IN, Pin.PULL_DOWN)
         self.f = f
         self.bounce = bounce
         self.time_sv=0
-        
+
         self.pin.irq(handler=self.button_event, trigger=trigger)
-    
+
 
 class GenericADCReader:
     """light dependent resistor (LDR)"""
@@ -64,22 +64,22 @@ class GenericADCReader:
 
 class LDR(GenericADCReader):
     pass
-    
+
 class DirtMoisture(GenericADCReader):
     def __init__(self, pin, power_pin):
         super().__init__(pin)
-        
+
         self.power_pin = Pin(power_pin, Pin.OUT)
         self.power_pin.off()
-    
+
     def read(self):
-        self.power_pin().on()
-        time.sleep(0.8)
+        self.power_pin.on()
+        utime.sleep(0.8)
         v = super().read()
-        self.power_pin().off()
-        
+        self.power_pin.off()
+
         return v
-    
+
 class ServoMotor:
     """Servo Motor"""
 
@@ -91,13 +91,13 @@ class ServoMotor:
 
     def set_angle(self, angle):
         """Set rotation angle between 0-180"""
-        
+
         angle = angle + self.motor_calibration
         self.pin.duty(int(self.duty_min + (angle/180)*(self.duty_max-self.duty_min)))
-        
+
 class StepMotor:
     stepper_pins = []
-    
+
     # Definisco i pin per stepper motor
     def __init__(self, pin1,pin2,pin3,pin4):
         self.stepper_pins.append(Pin(pin1, Pin.OUT))
@@ -110,10 +110,10 @@ class StepMotor:
     # due bobbine accese per ogni step -> più coppia
     #il valore (0=spento, 1=acceso) da dare a quel pin nel passo corrente.
     step_sequence = [
-        [1, 0, 0, 1], 
-        [1, 1, 0, 0], 
-        [0, 1, 1, 0], 
-        [0, 0, 1, 1], 
+        [1, 0, 0, 1],
+        [1, 1, 0, 0],
+        [0, 1, 1, 0],
+        [0, 0, 1, 1],
     ]
 
     #la half-step corrispondente (8 stati) è questa:
@@ -142,7 +142,7 @@ class StepMotor:
             # assicurando che la sequenza dei passi venga ripetuta ciclicamente.
             # indica la riga quindi quale passo
             step_index = (step_index + direction) % len(self.step_sequence) # se la sequenza ha 4 stati è come fare mod 4
-            
+
             #pin_index determina la colonna (quindi la bobbina)
             for pin_index in range(len(self.stepper_pins)):
                 #Esempio: se step_index = 2, la sequenza è [0, 1, 1, 0]
@@ -153,18 +153,18 @@ class StepMotor:
                 pin_value = self.step_sequence[step_index][pin_index]
                 #Scrive il valore sul pin fisico, accendendo o spegnendo la bobina
                 self.stepper_pins[pin_index].value(pin_value)
-            
+
             #Aspetta il tempo delay prima di passare al prossimo passo.
             #Pausa più corta → motore più veloce. Pausa più lunga → motore più lento.
             utime.sleep(delay)
-            
+
 class EchoDistance():
     SOUND_SPEED = 0.0343
-    
+
     def __init__(self, trigger_pin, echo_pin):
         self.trigger = Pin(trigger_pin, Pin.OUT)
         self.echo = Pin(echo_pin, Pin.IN)
-        
+
     def measure(self):
         """
         Restituisce la distanza misurata dal sensore (in cm).
@@ -175,27 +175,29 @@ class EchoDistance():
         self.trigger.on()
         utime.sleep_us(10)
         self.trigger.off()
-        
+
         while self.echo.value() == 0:
             inizio = utime.ticks_us()
-        
+
         while self.echo.value() == 1:
             fine = utime.ticks_us()
-            
+
         durata = utime.ticks_diff(fine, inizio)
-        
+
         return (durata * EchoDistance.SOUND_SPEED) / 2
 
 class WaterPump:
     def __init__(self, relay):
         self.relay = Pin(relay, Pin.OUT)
         self.off()
-    
+
     # Il segnale di enable funziona al contrario.
     # La pompa è spenta per segnali alti sul pin.
-    def on():
+    def on(self):
         self.relay.off()
-    def off():
+
+    def off(self):
         self.relay.on()
-    def toggle():
-        relay.value(not relay.value())
+
+    def toggle(self):
+        self.relay.value(not self.relay.value())
