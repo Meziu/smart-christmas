@@ -1,14 +1,13 @@
 from umqtt.simple import MQTTClient
 import ujson
 import network
-import Oled ####
 from machine import Pin, I2C
 import ssd1306
 import time
 
 class MQTTManager():
-    WIFI_SSID = "Wokwi-GUEST"
-    WIFI_PASSWORD = ""
+    WIFI_SSID = "iPhone di Cili"
+    WIFI_PASSWORD = "bongos34"
 
     CLIENT_ID = "SmartChristmasTree5"
     BROKER    = "test.mosquitto.org"
@@ -41,13 +40,18 @@ class MQTTManager():
         oled.text("Connecting", 24, 24, 1)
         oled.text("to WiFi", 24, 34, 1)
         oled.show()
-        time.sleep(4)
+        time.sleep(2)
         
         while not sta_if.isconnected():
             print(".", end="")
             time.sleep(0.1)
         
         print(" Connected!")
+        
+        oled.fill(0)
+        oled.text("Connected!!!", 24, 24, 1)
+        oled.show()
+        time.sleep(1)
         
         self.client = MQTTClient(self.CLIENT_ID, self.BROKER, user=self.USER, password=self.PASSWORD)
         self.client.set_callback(self.subCallback)

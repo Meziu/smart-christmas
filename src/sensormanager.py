@@ -9,10 +9,10 @@ class SensorManager():
     EMPTY_TANK_LEVEL = 10 # serbatoio considerato vuoto sotto al 10%
     
     def __init__():
-        self.echo = EchoDistance(pin_digitalout, pin_digitalin)
-        self.dirtmoisture = DirtMoisture(pin_adc, pin_digitalout)
-        self.dht = DHT22(Pin(pin_digitalinout))
-        self.pump = WaterPump(pin_digitalout)
+        self.echo = EchoDistance(pin_digitalout, pin_digitalin) # 5, 18
+        self.dirtmoisture = DirtMoisture(pin_adc, pin_digitalout) # 34, 17
+        self.dht = DHT22(Pin(pin_digitalinout)) # 23
+        self.pump = WaterPump(pin_digitalout) # 33
         self.ldr = LDR(pin_adc)
         self.reset_button = Button(pin_digitalin)
         
