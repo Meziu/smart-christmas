@@ -22,7 +22,7 @@ sc.display.show_logo()
 utime.sleep(2)
 
 sc.display.oled.fill(0)
-sc.display.show_stats()
+sc.display.show_stats_page()
 
 while True:
     print(sc.sensors.read_sensors())

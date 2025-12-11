@@ -33,20 +33,10 @@ class DisplayManager():
         self.oled.show()
 
     def show_stats_page(self):
-        image_Layer_4_bits = bytearray(b'\xff\xe0')
-        image_Layer_5_bits = bytearray(b'\x0f\x80\x18\xc0\x10@pp\x80\x08\xbf\xe8\xbf\xe8\xbf\xe8\x80\x08\xbf\xe8\xbf\xe8\xbf\xe8\x80\x08\xbf\xe8\xbf\xe8\xbf\xe8\x80\x08\xbf\xe8\xbf\xe8\xbf\xe8\x80\x08\xbf\xe8\xbf\xe8\xbf\xe8\x80\x08')
-        image_network_bits = bytearray(b'\x00\x0e\x00\x0a\x00\x0a\x00\x0a\x00\xea\x00\xaa\x00\xaa\x00\xaa\x0e\xaa\x0a\xaa\x0a\xaa\x0a\xaa\xea\xaa\xaa\xaa\xee\xee\x00\x00')
+        image_pallinoGradi_bits = bytearray(b'@\xa0@')
+        image_testaBatteria_bits = bytearray(b'\x1f\x001\x80 \x80\xe0\xe0')
 
         self.oled.text("12:12", 3, 3, 1)
-
-        fb_image_network_bits = framebuf.FrameBuffer(image_network_bits, 15, 16, framebuf.MONO_HLSB)
-        self.oled.blit(fb_image_network_bits, 109, 2)
-
-        fb_image_Layer_4_bits = framebuf.FrameBuffer(image_Layer_4_bits, 11, 1, framebuf.MONO_HLSB)
-        self.oled.blit(fb_image_Layer_4_bits, 110, 50)
-
-        fb_image_Layer_5_bits = framebuf.FrameBuffer(image_Layer_5_bits, 13, 25, framebuf.MONO_HLSB)
-        self.oled.blit(fb_image_Layer_5_bits, 109, 25)
 
         self.oled.text("Terra:56%", 3, 29, 1)
 
@@ -56,10 +46,36 @@ class DisplayManager():
 
         self.oled.text("Temp:34", 3, 43, 1)
 
-        self.oled.ellipse(65, 42, 1, 1, 1, False)
-
         self.oled.text("C", 67, 43, 1)
+
+        fb_image_pallinoGradi_bits = framebuf.FrameBuffer(image_pallinoGradi_bits, 3, 3, framebuf.MONO_HLSB)
+        self.oled.blit(fb_image_pallinoGradi_bits, 64, 41)
+
+        self.oled.line(109, 49, 109, 29, 1)
+
+        self.oled.line(121, 49, 121, 29, 1)
+
+        self.oled.rect(109, 14, 3, 3, 1)
+
+        fb_image_testaBatteria_bits = framebuf.FrameBuffer(image_testaBatteria_bits, 11, 4, framebuf.MONO_HLSB)
+        self.oled.blit(fb_image_testaBatteria_bits, 110, 25)
+
+        self.oled.rect(113, 10, 3, 7, 1)
+
+        self.oled.rect(117, 6, 3, 11, 1)
+
+        self.oled.rect(121, 2, 3, 15, 1)
+
+        self.oled.line(110, 50, 120, 50, 1)
 
         self.oled.show()
 
     def show_stats_data():
+        pass
+        # TESTA BATTERIA: (109,25)
+        # BARRA1 : (111, 30), altezza 3, larghezza 9
+        #
+        # TACCA1 : (110, 15), (110, 15)
+        # TACCA2 : (114, 15), (114, 11)
+        # TACCA3 : (118, 15), (118, 7)
+        # TACCA4 : (122, 15), (122, 3)
