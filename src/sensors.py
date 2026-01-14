@@ -201,3 +201,139 @@ class WaterPump:
 
     def toggle(self):
         self.relay.value(not self.relay.value())
+        
+        
+        
+
+
+class Buzzer:
+    def __init__(self, buzzer_pin):
+        self.buzzer = PWM(Pin(buzzer_pin))
+        self.buzzer.duty(0)  # spento all'avvio
+
+        # --- NOTE ---
+        self.NOTE_C5  = 523
+        self.NOTE_D5  = 587
+        self.NOTE_E5  = 659
+        self.NOTE_F5  = 698
+        self.NOTE_G5  = 784
+        self.NOTE_B5 = 988
+        self.NOTE_A5 = 880
+        self.NOTE_FS5 = 740   # F#
+        self.NOTE_AS5 = 932   # A#
+
+        self.NOTE_B4 = 494
+        self.NOTE_G4 = 392
+        self.NOTE_A4 = 440
+        
+        self.NOTE_D6 = 1175
+        self.NOTE_C6 = 1047
+        self.NOTE_E6  = 1319
+
+
+
+        # --- MELODIA JINGLE BELLS ---
+        self.melody1 = [
+            self.NOTE_E5, self.NOTE_E5, self.NOTE_E5,
+            self.NOTE_E5, self.NOTE_E5, self.NOTE_E5,
+            self.NOTE_E5, self.NOTE_G5, self.NOTE_C5, self.NOTE_D5,
+            self.NOTE_E5,
+            self.NOTE_F5, self.NOTE_F5, self.NOTE_F5, self.NOTE_F5,
+            self.NOTE_F5, self.NOTE_E5, self.NOTE_E5, self.NOTE_E5, self.NOTE_E5,
+            self.NOTE_E5, self.NOTE_D5, self.NOTE_D5, self.NOTE_E5,
+            self.NOTE_D5, self.NOTE_G5
+        ]
+
+        self.durations1 = [
+            8, 8, 4,
+            8, 8, 4,
+            8, 8, 8, 8,
+            2,
+            8, 8, 8, 8,
+            8, 8, 8, 16, 16,
+            8, 8, 8, 8,
+            4, 4
+        ]
+        
+
+         # --- MELODIA WE WISH YOU A MERRY CHRISTMAS ---
+        self.melody2 = [
+            self.NOTE_D5, self.NOTE_G5, self.NOTE_G5, self.NOTE_A5, self.NOTE_G5, self.NOTE_FS5, self.NOTE_E5,
+            self.NOTE_E5, self.NOTE_E5, self.NOTE_A5, self.NOTE_A5, self.NOTE_B5, self.NOTE_A5, self.NOTE_G5,
+            self.NOTE_FS5, self.NOTE_D5, self.NOTE_D5, self.NOTE_B5, self.NOTE_B5, self.NOTE_C6, self.NOTE_B5,
+            self.NOTE_A5, self.NOTE_G5, self.NOTE_E5, self.NOTE_D5, self.NOTE_E5, self.NOTE_A5, self.NOTE_FS5,
+            self.NOTE_G5,
+        ]
+        
+        self.durations2 = [
+            4,4,8,8,8,8,4,
+            4,4,4,8,8,8,8,
+            4,4,4,4,8,8,
+            8,8,4,4,4,4,4,4,2
+        ]
+
+
+        # --- MELODIA LET IT SNOW ---
+        self.melody3 = [
+            self.NOTE_C5, self.NOTE_C5, self.NOTE_C6, self.NOTE_C6, self.NOTE_AS5, self.NOTE_A5, self.NOTE_G5, self.NOTE_F5,
+            self.NOTE_C5, self.NOTE_C5, self.NOTE_C5, self.NOTE_G5, self.NOTE_F5, self.NOTE_G5, self.NOTE_F5, self.NOTE_E5,
+            self.NOTE_C5, self.NOTE_D5, self.NOTE_D6, self.NOTE_D6, self.NOTE_C6, self.NOTE_AS5, self.NOTE_A5, self.NOTE_G5,
+            self.NOTE_E6, self.NOTE_D6, self.NOTE_C6, self.NOTE_C6, self.NOTE_AS5, self.NOTE_A5, self.NOTE_A5, self.NOTE_G5,
+            self.NOTE_F5,
+        ]
+
+        self.durations3 = [
+            8,8,8,8,4,4,8,4,
+            2,8,8,4,4,4,8,4,
+            2,4,8,8,4,4,8,2,
+            4,16,4,8,16,4,8,16,
+            2,
+        ]
+        
+        
+    
+    def _play(self, melody, durations):
+        for i in range(len(melody)):
+            note = melody[i]
+            duration = int(1000 / durations[i])
+
+            self.buzzer.freq(melody[i])
+            self.buzzer.duty(700)
+
+            utime.sleep_ms(duration)
+            self.buzzer.duty(0)
+            utime.sleep_ms(int(duration * 0.6))
+            
+            
+
+    def play_jb(self):
+        self._play(self.melody1, self.durations1)
+
+
+    def play_wwmc(self):
+        self._play(self.melody2, self.durations2)
+
+
+    def play_lis(self):
+        self._play(self.melody3, self.durations3)
+
+
+    def stop(self):
+        self.buzzer.duty(0)
+        self.buzzer.deinit()
+        
+
+buzzer = Buzzer(14)
+
+try:
+    while True:
+        buzzer.play_jb()
+        time.sleep(2)
+        buzzer.play_wwmc()
+        time.sleep(2)
+        buzzer.play_lis()
+
+except KeyboardInterrupt:
+    buzzer.stop()
+    print("Musica interrotta")
+
