@@ -18,10 +18,10 @@ class MQTTManager():
     SENSOR_TOPIC = MACRO_TOPIC + "env"
     ACTUATOR_TOPIC = MACRO_TOPIC + "act"
 
-    def subCallback(self, topic,msg):
+    def subCallback(self, topic, msg):
         print(topic,msg)
 
-    def __init__(self, oled):
+    def __init__(self, display):
         sta_if = network.WLAN(network.STA_IF)
 
         sta_if.active(True)
@@ -29,20 +29,15 @@ class MQTTManager():
 
         sta_if.connect(self.WIFI_SSID, self.WIFI_PASSWORD)
 
-        oled.fill(0)
-        oled.text("Connecting", 24, 24, 1)
-        oled.text("to WiFi", 24, 34, 1)
-        oled.show()
+        display.show_connecting() # Connecting to Wifi
 
         while not sta_if.isconnected():
             print(".", end="")
             time.sleep(0.1)
 
-        print(" Connected to Wi-Fi!")
+        print(" Connesso al Wi-Fi!")
 
-        oled.fill(0)
-        oled.text("Connected!!!", 24, 24, 1)
-        oled.show()
+        display.show_connected() # Connesso!
 
         self.client = MQTTClient(self.CLIENT_ID, self.BROKER, user=self.USER, password=self.PASSWORD, port=1883, keepalive=30, ssl=False)
         self.client.set_callback(self.subCallback)
@@ -55,12 +50,13 @@ class MQTTManager():
         message = ujson.dumps(data)
         self.client.publish(self.SENSOR_TOPIC, message)
 
-if __name__ == "__main__":
-    i2c = I2C(0, scl=Pin(22), sda=Pin(21))
-
-    oled_width = 128
-    oled_height = 64
-    oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
-    man = MQTTManager(oled)
-
-    man.upload_sensor_data({"sto": "chillando"})
+# Test di funzionamento
+#if __name__ == "__main__":
+#    i2c = I2C(0, scl=Pin(22), sda=Pin(21))
+#
+#    oled_width = 128
+#    oled_height = 64
+#    oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
+#    man = MQTTManager(oled)
+#
+#    man.upload_sensor_data({"sto": "chillando"})

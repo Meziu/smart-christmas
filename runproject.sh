@@ -15,6 +15,5 @@ done
 echo "Upload complete."
 
 echo "Executing program."
-mpremote exec "import smartchristmas"
+mpremote exec "import main"
 echo "Execution terminated."
-
