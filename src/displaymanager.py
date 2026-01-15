@@ -207,12 +207,15 @@ class DisplayManager():
         # Inizializziamo gli offset casuali
         offsets = [random.randint(3, 8) for _ in range(9)]
 
-        # Punto di riproduzione
+        play_step = 0
+
+        # Info di riproduzione
         self.oled.text("Last Christmas", 9, 46, 1)
+        # linea lunga di riproduzione
         self.oled.line(7, 58, 119, 58, 1)
+        # linee laterali delimitatrici
         self.oled.line(7, 57, 7, 59, 1)
         self.oled.line(120, 57, 120, 59, 1)
-        self.oled.ellipse(7, 58, 2, 2, 1, True)
 
         while True:
             for i in range(len(offsets)):
@@ -240,5 +243,10 @@ class DisplayManager():
                     offsets[i] = MAX_O
 
             draw_bars(offsets)
+
+            # punto di riproduzione
+            self.oled.ellipse(10 + play_step, 58, 2, 2, 1, True)
+            play_step = min(107, play_step + 1)
+
             self.oled.show()
             utime.sleep(0.1)
