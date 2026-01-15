@@ -16,13 +16,14 @@ class SmartChristmas():
 
         self.display.clear()
         self.display.draw_header()
-        self.display.draw_stats_page()
+       # self.display.draw_stats_page()
+        self.display.draw_music_page()
 
         while True:
             self.sensors.read_sensors()
             print(self.sensors.sensor_data)
 
             self.display.draw_header_data()
-            self.display.draw_stats_data(self.sensors.sensor_data)
+            #self.display.draw_stats_data(self.sensors.sensor_data)
 
             self.display.oled.show()

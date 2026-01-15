@@ -3,6 +3,7 @@ import ssd1306
 import framebuf
 import utime
 import network
+import random
 
 # Helper per ottenere le dimensioni sullo schermo del testo.
 def text_width(text):
@@ -188,3 +189,57 @@ class DisplayManager():
             else:
                 # pulizia
                 self.oled.rect(111, by - BAR_H + 1, BAR_W, BAR_H, 0, True)
+
+    def draw_music_page(self):
+        MIN_O = 3
+        MAX_O = 13
+
+        # Finto spettrogramma
+        def draw_bars(offsets):
+            self.oled.rect(47, 16, 79, 42, 0, True)  # pulizia sezione dello spettrogramma
+            x_positions = [47, 51, 55, 59, 63, 67, 71, 75, 79]
+            y_center = 29  # centro verticale
+            for i, offset in enumerate(offsets):
+                y_top = y_center - offset
+                height = 2 * offset  # metà sopra e metà sotto il centro
+                self.oled.rect(x_positions[i], y_top, 2, height, 1)
+            self.oled.show()
+
+        # Inizializziamo gli offset casuali
+        offsets = [random.randint(3, 8) for _ in range(9)]
+
+        while True:
+            for i in range(len(offsets)):
+                # Scelta casuale di offset per il prossimo frame
+                offsets[i] += random.choice([-2, -1, 0, 1, 2])
+
+                # Ogni barra è influenzata in egual misura dal valore dei suoi vicini
+                if i == 0:
+                        offsets[i] = int((3*offsets[i] + offsets[i+1]) / 4)
+                elif i == len(offsets) - 1:
+                        offsets[i] = int((3*offsets[i] + offsets[i-1]) / 4)
+                else:
+                    offsets[i] = int(
+                        (3*offsets[i] + (offsets[i-1] + offsets[i+1])/2) / 4
+                    )
+
+                # Esplosione di ampiezza casuale ogni tanto per diversificare
+                if random.random() < 0.04:
+                    offsets[i] += random.randint(3, 6)
+
+                # Clamp del valore ai limiti di spazio
+                if offsets[i] < MIN_O:
+                    offsets[i] = MIN_O
+                elif offsets[i] > MAX_O:
+                    offsets[i] = MAX_O
+
+            draw_bars(offsets)
+            utime.sleep(0.1)
+
+        # Punto di riproduzione
+        #self.oled.text("Last Christmas", 9, 46, 1)
+        #self.oled.line(0, 0, 0, 0, 1)
+        #self.oled.line(7, 58, 119, 58, 1)
+        #self.oled.line(7, 57, 7, 59, 1)
+        #self.oled.line(120, 57, 120, 59, 1)
+        #self.oled.ellipse(7, 58, 2, 2, 1, True)
