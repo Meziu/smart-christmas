@@ -16,7 +16,7 @@ class SmartChristmas():
 
         self.display.clear()
         self.display.draw_header()
-       # self.display.draw_stats_page()
+        #self.display.draw_stats_page()
         self.display.draw_music_page()
 
         while True:
