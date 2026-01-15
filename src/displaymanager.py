@@ -26,6 +26,12 @@ class DisplayManager():
     DIRT_MOISTURE_LABEL_WIDTH = text_width(DIRT_MOISTURE_LABEL)
     TEMPERATURE_LABEL_WIDTH = text_width(TEMPERATURE_LABEL)
 
+    # Dimensione delle stringhe scritte nello scorso rendering della
+    # pagina di statistiche così da permettere un clear localizzato della superficie oled
+    _hum_width = 0
+    _moist_width = 0
+    _temp_width = 0
+
     def __init__(self):
         # ESP32 Pin assignment to OLED
         self.i2c = I2C(0, scl=Pin(22), sda=Pin(21))
@@ -34,6 +40,9 @@ class DisplayManager():
 
     def clear(self):
         self.oled.fill(0)
+
+    def clear_page(self):
+        self.oled.rect(0, 16, 128, 64, 0, True)
 
     def show_connecting(self):
         self.clear()
@@ -69,14 +78,14 @@ class DisplayManager():
         self.oled.show()
 
     # Layout delle componenti UI fisse in alto
-    def show_header(self):
+    def draw_header(self):
         # Status Connettività WIFI
         self.oled.rect(109, 14, 3, 3, 1)
         self.oled.rect(113, 10, 3, 7, 1)
         self.oled.rect(117, 6, 3, 11, 1)
         self.oled.rect(121, 2, 3, 15, 1)
 
-    def show_wifi_strength(self):
+    def draw_wifi_strength(self):
         sta_if = network.WLAN(network.STA_IF)
         rssi = sta_if.status('rssi')
 
@@ -105,17 +114,17 @@ class DisplayManager():
             self.oled.line(x1, y1, x2, y2, colore)
 
     # Aggiornamento dinamico delle componenti UI fisse in alto
-    def show_header_data(self):
+    def draw_header_data(self):
         # Orologio
         h, m = localtime_italy()[3:5]
         self.oled.rect(3, 8, 40, 8, 0, True) # pulizia rect dell'orologio
         self.oled.text(f"{h:02d}:{m:02d}", 3, 8, 1)
 
         # Tacche del wifi
-        self.show_wifi_strength()
+        self.draw_wifi_strength()
 
     # Layout e struttura della pagina informativa
-    def show_stats_page(self):
+    def draw_stats_page(self):
         testaBatteria_bits = bytearray(b'\x1f\x001\x80 \x80\xe0\xe0')
 
         self.oled.text(self.AIR_HUMIDITY_LABEL, 3, 20, 1)
@@ -135,39 +144,33 @@ class DisplayManager():
         fb_testaBatteria = framebuf.FrameBuffer(testaBatteria_bits, 11, 4, framebuf.MONO_HLSB)
         self.oled.blit(fb_testaBatteria, 110, 25)
 
-    # Dimensione delle stringhe scritte nello scorso rendering della
-    # pagina di statistiche così da permettere un clear localizzato della superficie oled
-    hum_width = 0
-    moist_width = 0
-    temp_width = 0
-
     # Aggiorniamo solo le informazioni dinamiche sulla pagina e non tutto il layout
     # in modo tale da usare solo le risorse minime ed indispensabili per il rendering
-    def show_stats_data(self, sensor_data):
+    def draw_stats_data(self, sensor_data):
         pallinoGradi_bits = bytearray(b'@\xa0@')
 
         # Percentuale umidità dell'aria
         hum_str = f"{sensor_data["air_humidity"]:.1f}%"
-        self.oled.rect(3 + self.AIR_HUMIDITY_LABEL_WIDTH, 20, self.hum_width, 8, 0, True) # pulizia del rect della stringa precedente
-        self.hum_width = text_width(hum_str)
+        self.oled.rect(3 + self.AIR_HUMIDITY_LABEL_WIDTH, 20, self._hum_width, 8, 0, True) # pulizia del rect della stringa precedente
+        self._hum_width = text_width(hum_str)
         self.oled.text(hum_str, 3 + self.AIR_HUMIDITY_LABEL_WIDTH, 20, 1)
 
         # Percentuale umidità del terreno
         moist_str = f"{sensor_data["soil_moisture"]:.1f}%"
-        self.oled.rect(3 + self.DIRT_MOISTURE_LABEL_WIDTH, 29, self.moist_width, 8, 0, True) # pulizia del rect della stringa precedente
-        self.moist_width = text_width(moist_str)
+        self.oled.rect(3 + self.DIRT_MOISTURE_LABEL_WIDTH, 29, self._moist_width, 8, 0, True) # pulizia del rect della stringa precedente
+        self._moist_width = text_width(moist_str)
         self.oled.text(moist_str, 3 + self.DIRT_MOISTURE_LABEL_WIDTH, 29, 1)
 
         # Temperatura dell'aria
         temp_str = f"{sensor_data["air_temperature"]:.1f}"
-        self.oled.rect(3 + self.TEMPERATURE_LABEL_WIDTH, 41, self.temp_width + 3 + 8, 10, 0, True) # pulizia del rect della stringa precedente
+        self.oled.rect(3 + self.TEMPERATURE_LABEL_WIDTH, 41, self._temp_width + 3 + 8, 10, 0, True) # pulizia del rect della stringa precedente
         self.moist_width = text_width(moist_str)
         self.oled.text(temp_str, 3 + self.TEMPERATURE_LABEL_WIDTH, 43, 1)
-        self.temp_width = text_width(temp_str)
+        self._temp_width = text_width(temp_str)
 
         fb_pallinoGradi = framebuf.FrameBuffer(pallinoGradi_bits, 3, 3, framebuf.MONO_HLSB)
-        self.oled.blit(fb_pallinoGradi, 3 + self.TEMPERATURE_LABEL_WIDTH + self.temp_width, 41)
-        self.oled.text("C", 3 + self.TEMPERATURE_LABEL_WIDTH + self.temp_width + 3, 43, 1) # il secondo + 3 proviene dalla dimensione del pallino per i gradi
+        self.oled.blit(fb_pallinoGradi, 3 + self.TEMPERATURE_LABEL_WIDTH + self._temp_width, 41)
+        self.oled.text("C", 3 + self.TEMPERATURE_LABEL_WIDTH + self._temp_width + 3, 43, 1) # il secondo + 3 proviene dalla dimensione del pallino per i gradi
 
         # Livello Serbatoio
         level = min(4, sensor_data["tank_level"] // 20)
@@ -185,5 +188,3 @@ class DisplayManager():
             else:
                 # pulizia
                 self.oled.rect(111, by - BAR_H + 1, BAR_W, BAR_H, 0, True)
-
-        self.oled.show()

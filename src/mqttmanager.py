@@ -17,7 +17,7 @@ class MQTTManager():
 
     MACRO_TOPIC = "unisa/diem/iot/smartchristmas/"
     SENSOR_TOPIC = MACRO_TOPIC + "env"
-    ACTUATOR_TOPIC = MACRO_TOPIC + "act"
+    COMMAND_TOPIC = MACRO_TOPIC + "cmd"
 
     def subCallback(self, topic, msg):
         print(topic,msg)
@@ -50,7 +50,7 @@ class MQTTManager():
         self.client = MQTTClient(self.CLIENT_ID, self.BROKER, user=self.USER, password=self.PASSWORD, port=1883, keepalive=30, ssl=False)
         self.client.set_callback(self.subCallback)
         self.client.connect()
-        self.client.subscribe(self.ACTUATOR_TOPIC)
+        self.client.subscribe(self.COMMAND_TOPIC)
 
         print("MQTT connected!")
 
