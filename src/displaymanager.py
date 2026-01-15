@@ -1,10 +1,17 @@
 from machine import Pin, I2C
 import ssd1306
 import framebuf
+import utime
+import network
 
 # Helper per ottenere le dimensioni sullo schermo del testo.
 def text_width(text):
     return len(text) * 8
+
+# Helper per il fuso orario italiano (posto che funzioni la sincronizzazione NTP)
+def localtime_italy():
+    t = utime.localtime()
+    return utime.localtime(utime.mktime(t) + 3600)
 
 class DisplayManager():
     OLED_WIDTH = 128
@@ -63,20 +70,49 @@ class DisplayManager():
 
     # Layout delle componenti UI fisse in alto
     def show_header(self):
-        # Orologio
-        self.oled.text("12:12", 3, 3, 1)
-
         # Status Connettività WIFI
         self.oled.rect(109, 14, 3, 3, 1)
         self.oled.rect(113, 10, 3, 7, 1)
         self.oled.rect(117, 6, 3, 11, 1)
         self.oled.rect(121, 2, 3, 15, 1)
 
-        self.show_header_data()
+    def show_wifi_strength(self):
+        sta_if = network.WLAN(network.STA_IF)
+        rssi = sta_if.status('rssi')
+
+        tacche = [
+            ((110, 15), (110, 15)),  # Tacca 1 (punto)
+            ((114, 15), (114, 11)),  # Tacca 2
+            ((118, 15), (118, 7)),   # Tacca 3
+            ((122, 15), (122, 3)),   # Tacca 4
+        ]
+
+        # Determina quante tacche accendere
+        if rssi > -50:
+            tacche_attive = 4
+        elif rssi > -60:
+            tacche_attive = 3
+        elif rssi > -70:
+            tacche_attive = 2
+        elif rssi > -80:
+            tacche_attive = 1
+        else:
+            tacche_attive = 0
+
+        # Disegna tutte le tacche: bianco se attiva, nero se inattiva
+        for i, ((x1, y1), (x2, y2)) in enumerate(tacche):
+            colore = 1 if i < tacche_attive else 0  # 1=bianco, 0=nero
+            self.oled.line(x1, y1, x2, y2, colore)
 
     # Aggiornamento dinamico delle componenti UI fisse in alto
     def show_header_data(self):
-        pass
+        # Orologio
+        h, m = localtime_italy()[3:5]
+        self.oled.rect(3, 8, 40, 8, 0, True) # pulizia rect dell'orologio
+        self.oled.text(f"{h:02d}:{m:02d}", 3, 8, 1)
+
+        # Tacche del wifi
+        self.show_wifi_strength()
 
     # Layout e struttura della pagina informativa
     def show_stats_page(self):
@@ -94,10 +130,10 @@ class DisplayManager():
 
         self.oled.line(121, 49, 121, 29, 1)
 
+        self.oled.line(110, 50, 120, 50, 1)
+
         fb_testaBatteria = framebuf.FrameBuffer(testaBatteria_bits, 11, 4, framebuf.MONO_HLSB)
         self.oled.blit(fb_testaBatteria, 110, 25)
-
-        self.oled.line(110, 50, 120, 50, 1)
 
     # Dimensione delle stringhe scritte nello scorso rendering della
     # pagina di statistiche così da permettere un clear localizzato della superficie oled
@@ -133,11 +169,21 @@ class DisplayManager():
         self.oled.blit(fb_pallinoGradi, 3 + self.TEMPERATURE_LABEL_WIDTH + self.temp_width, 41)
         self.oled.text("C", 3 + self.TEMPERATURE_LABEL_WIDTH + self.temp_width + 3, 43, 1) # il secondo + 3 proviene dalla dimensione del pallino per i gradi
 
+        # Livello Serbatoio
+        level = min(4, sensor_data["tank_level"] // 20)
+
+        BAR_W = 9
+        BAR_H = 4
+        GAP = 1
+
+        for i in range(4):
+            by = 48 - i * (BAR_H + GAP)
+
+            if i < level:
+                # riempimento dal basso
+                self.oled.rect(111, by - BAR_H + 1, BAR_W, BAR_H, 1, True)
+            else:
+                # pulizia
+                self.oled.rect(111, by - BAR_H + 1, BAR_W, BAR_H, 0, True)
+
         self.oled.show()
-        # TESTA BATTERIA: (109,25)
-        # BARRA1 : (111, 30), altezza 3, larghezza 9
-        #
-        # TACCA1 : (110, 15), (110, 15)
-        # TACCA2 : (114, 15), (114, 11)
-        # TACCA3 : (118, 15), (118, 7)
-        # TACCA4 : (122, 15), (122, 3)

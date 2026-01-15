@@ -12,7 +12,7 @@ class SmartChristmas():
     def run(self):
         self.display.show_logo()
 
-        utime.sleep(2)
+        utime.sleep(1)
 
         self.display.clear()
         self.display.show_header()
@@ -22,4 +22,5 @@ class SmartChristmas():
             self.sensors.read_sensors()
             print(self.sensors.sensor_data)
 
+            self.display.show_header_data()
             self.display.show_stats_data(self.sensors.sensor_data)

@@ -3,7 +3,8 @@ import ujson
 import network
 from machine import Pin, I2C
 import ssd1306
-import time
+import utime
+import ntptime
 
 class MQTTManager():
     WIFI_SSID = "iPhone di Cili"
@@ -33,11 +34,18 @@ class MQTTManager():
 
         while not sta_if.isconnected():
             print(".", end="")
-            time.sleep(0.1)
+            utime.sleep(0.1)
 
         print(" Connesso al Wi-Fi!")
 
         display.show_connected() # Connesso!
+
+        # Sincronizzazione orologio
+        try:
+            ntptime.settime()
+            print("Ora sincronizzata via NTP")
+        except:
+            print("Errore sincronizzazione NTP")
 
         self.client = MQTTClient(self.CLIENT_ID, self.BROKER, user=self.USER, password=self.PASSWORD, port=1883, keepalive=30, ssl=False)
         self.client.set_callback(self.subCallback)
