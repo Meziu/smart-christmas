@@ -201,9 +201,9 @@ class WaterPump:
 
     def toggle(self):
         self.relay.value(not self.relay.value())
-        
-        
-        
+
+
+
 
 
 class Buzzer:
@@ -225,7 +225,7 @@ class Buzzer:
         self.NOTE_B4 = 494
         self.NOTE_G4 = 392
         self.NOTE_A4 = 440
-        
+
         self.NOTE_D6 = 1175
         self.NOTE_C6 = 1047
         self.NOTE_E6  = 1319
@@ -254,7 +254,7 @@ class Buzzer:
             8, 8, 8, 8,
             4, 4
         ]
-        
+
 
          # --- MELODIA WE WISH YOU A MERRY CHRISTMAS ---
         self.melody2 = [
@@ -264,7 +264,7 @@ class Buzzer:
             self.NOTE_A5, self.NOTE_G5, self.NOTE_E5, self.NOTE_D5, self.NOTE_E5, self.NOTE_A5, self.NOTE_FS5,
             self.NOTE_G5,
         ]
-        
+
         self.durations2 = [
             4,4,8,8,8,8,4,
             4,4,4,8,8,8,8,
@@ -289,9 +289,9 @@ class Buzzer:
             4,16,4,8,16,4,8,16,
             2,
         ]
-        
-        
-    
+
+
+
     def _play(self, melody, durations):
         for i in range(len(melody)):
             note = melody[i]
@@ -303,8 +303,8 @@ class Buzzer:
             utime.sleep_ms(duration)
             self.buzzer.duty(0)
             utime.sleep_ms(int(duration * 0.6))
-            
-            
+
+
 
     def play_jb(self):
         self._play(self.melody1, self.durations1)
@@ -321,19 +321,18 @@ class Buzzer:
     def stop(self):
         self.buzzer.duty(0)
         self.buzzer.deinit()
-        
 
-buzzer = Buzzer(14)
 
-try:
-    while True:
-        buzzer.play_jb()
-        time.sleep(2)
-        buzzer.play_wwmc()
-        time.sleep(2)
-        buzzer.play_lis()
-
-except KeyboardInterrupt:
-    buzzer.stop()
-    print("Musica interrotta")
-
+#buzzer = Buzzer(14)
+#
+#try:
+#    while True:
+#        buzzer.play_jb()
+#        time.sleep(2)
+#        buzzer.play_wwmc()
+#        time.sleep(2)
+#        buzzer.play_lis()
+#
+#except KeyboardInterrupt:
+#    buzzer.stop()
+#    print("Musica interrotta")
