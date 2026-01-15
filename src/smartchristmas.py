@@ -11,15 +11,15 @@ class SmartChristmas():
 
     def run(self):
         self.display.show_logo()
-        utime.sleep(1)
-
-        self.display.show_blank()
-        self.display.show_logo()
 
         utime.sleep(2)
 
-        self.display.show_blank()
+        self.display.clear()
+        self.display.show_header()
         self.display.show_stats_page()
 
         while True:
-            print(self.sensors.read_sensors())
+            self.sensors.read_sensors()
+            print(self.sensors.sensor_data)
+
+            self.display.show_stats_data(self.sensors.sensor_data)

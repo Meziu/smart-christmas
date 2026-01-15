@@ -48,8 +48,6 @@ class SensorManager():
 
         sleep(2)
 
-        return self.sensor_data
-
     def should_activate_pump(self):
         # Il serbatoio ha abbastanza acqua da pompare e l'umidità del terreno è sotto un determinato livello
         return self.sensor_data["tank_level"] > self.EMPTY_TANK_LEVEL and self.sensor_data["soil_moisture"] < self.MOISTURE_LOW_LEVEL
