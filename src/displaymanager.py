@@ -150,13 +150,13 @@ class DisplayManager():
         pallinoGradi_bits = bytearray(b'@\xa0@')
 
         # Percentuale umidità dell'aria
-        hum_str = f"{sensor_data["air_humidity"]:.1f}%"
+        hum_str = f"{sensor_data["air_humidity"]:.3g}%"
         self.oled.rect(3 + self.AIR_HUMIDITY_LABEL_WIDTH, 20, self._hum_width, 8, 0, True) # pulizia del rect della stringa precedente
         self._hum_width = text_width(hum_str)
         self.oled.text(hum_str, 3 + self.AIR_HUMIDITY_LABEL_WIDTH, 20, 1)
 
         # Percentuale umidità del terreno
-        moist_str = f"{sensor_data["soil_moisture"]:.1f}%"
+        moist_str = f"{sensor_data["soil_moisture"]:.3g}%"
         self.oled.rect(3 + self.DIRT_MOISTURE_LABEL_WIDTH, 29, self._moist_width, 8, 0, True) # pulizia del rect della stringa precedente
         self._moist_width = text_width(moist_str)
         self.oled.text(moist_str, 3 + self.DIRT_MOISTURE_LABEL_WIDTH, 29, 1)
