@@ -6,16 +6,7 @@ import ssd1306
 import utime
 from machine import I2C, Pin
 
-
-# Helper per ottenere le dimensioni sullo schermo del testo.
-def text_width(text):
-    return len(text) * 8
-
-
-# Helper per il fuso orario italiano (posto che funzioni la sincronizzazione NTP)
-def localtime_italy():
-    t = utime.localtime()
-    return utime.localtime(utime.mktime(t) + 3600)
+from utils import localtime_italy, text_width
 
 
 class DisplayManager:
