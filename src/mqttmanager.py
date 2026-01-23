@@ -1,10 +1,12 @@
+import _thread
+
 import network
 import ntptime
 import ssd1306
 import ujson
 import utime
 from machine import I2C, Pin
-from umqtt.robust import MQTTClient
+from umqtt.simple import MQTTClient
 
 from utils import localtime_italy_str
 
@@ -14,7 +16,7 @@ class MQTTManager:
     WIFI_PASSWORD = "bongos34"
 
     CLIENT_ID = "SCT1"
-    BROKER = "broker.emqx.io"
+    BROKER = "test.mosquitto.org"
     USER = None
     PASSWORD = None
 
@@ -24,6 +26,10 @@ class MQTTManager:
 
     def subCallback(self, topic, msg):
         print(topic, msg)
+
+    def update_thread(self):
+        while True:
+            self.client.wait_msg()
 
     def __init__(self, display):
         sta_if = network.WLAN(network.STA_IF)
@@ -61,7 +67,10 @@ class MQTTManager:
         )
         self.client.set_callback(self.subCallback)
         self.client.connect()
-        self.client.subscribe(self.COMMAND_TOPIC)
+        self.client.subscribe(self.COMMAND_TOPIC + "/lights")
+
+        # Lancia un thread per leggere immediatamente i messaggi MQTT
+        _thread.start_new_thread(self.update_thread, ())
 
         print("MQTT connected!")
 
