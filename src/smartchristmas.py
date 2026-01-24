@@ -41,7 +41,6 @@ class SmartChristmas:
             self.sensors.read_sensors()
             self.mqtt.upload_sensor_data(self.sensors.sensor_data)
             print(self.sensors.sensor_data)
-            self.mqtt.client.check_msg()
 
             self.display.update_page()
 

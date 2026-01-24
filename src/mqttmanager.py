@@ -31,14 +31,10 @@ class MQTTManager:
         while True:
             try:
                 self.client.wait_msg()
-            except OSError:
-                print("MQTT connection lost, reconnecting...")
-                try:
-                    self.client.disconnect()
-                except:
-                    pass
-                utime.sleep(2)
-                reconnect()
+            except OSError as e:
+                print("Errore nell'attesa di un messaggio MQTT:", e)
+                self.client.disconnect()
+                self.client.connect()
 
     def __init__(self, display, sensors):
         sta_if = network.WLAN(network.STA_IF)
