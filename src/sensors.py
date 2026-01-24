@@ -1,9 +1,10 @@
-from machine import Pin, PWM, ADC
 import utime
+from machine import ADC, PWM, Pin
+
 
 class Led:
-    def __init__(self,pin, freq=5000, on_duty=256):
-        self.pin = PWM(Pin(pin, Pin.OUT),freq=freq,duty_u16=0)
+    def __init__(self, pin, freq=5000, on_duty=256):
+        self.pin = PWM(Pin(pin, Pin.OUT), freq=freq, duty_u16=0)
         self.on_duty = on_duty
 
     def duty(self, duty):
@@ -21,6 +22,7 @@ class Led:
         else:
             self.on()
 
+
 class Button:
     def button_event(self, b):
         curr = utime.ticks_ms()
@@ -33,12 +35,11 @@ class Button:
 
         self.f(b)
 
-
     def __init__(self, pin, f, bounce=200, trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING):
         self.pin = Pin(pin, Pin.IN, Pin.PULL_DOWN)
         self.f = f
         self.bounce = bounce
-        self.time_sv=0
+        self.time_sv = 0
 
         self.pin.irq(handler=self.button_event, trigger=trigger)
 
@@ -48,7 +49,7 @@ class GenericADCReader:
 
     def __init__(self, pin, min_value=0, max_value=100):
         if min_value >= max_value:
-            raise Exception('Min value is greater or equal to max value')
+            raise Exception("Min value is greater or equal to max value")
 
         # initialize ADC (analog to digital conversion)
         # create an object ADC
@@ -62,15 +63,17 @@ class GenericADCReader:
     def value(self):
         return (self.max_value - self.min_value) * self.read() / 4095
 
+
 class LDR(GenericADCReader):
     pass
+
 
 class DirtMoisture(GenericADCReader):
     def __init__(self, pin, power_pin):
         super().__init__(pin)
 
         self.power_pin = Pin(power_pin, Pin.OUT)
-        self.power_pin.off()
+        self.power_pin.on()
 
     def read(self):
         self.power_pin.on()
@@ -80,11 +83,13 @@ class DirtMoisture(GenericADCReader):
 
         return v
 
+
 class ServoMotor:
     """Servo Motor"""
 
     duty_min = 26
     duty_max = 128
+
     def __init__(self, pin, motor_calibration=-13):
         self.pin = PWM(Pin(pin, Pin.OUT), freq=50)
         self.motor_calibration = motor_calibration
@@ -93,22 +98,24 @@ class ServoMotor:
         """Set rotation angle between 0-180"""
 
         angle = angle + self.motor_calibration
-        self.pin.duty(int(self.duty_min + (angle/180)*(self.duty_max-self.duty_min)))
+        self.pin.duty(
+            int(self.duty_min + (angle / 180) * (self.duty_max - self.duty_min))
+        )
+
 
 class StepMotor:
     stepper_pins = []
 
     # Definisco i pin per stepper motor
-    def __init__(self, pin1,pin2,pin3,pin4):
+    def __init__(self, pin1, pin2, pin3, pin4):
         self.stepper_pins.append(Pin(pin1, Pin.OUT))
         self.stepper_pins.append(Pin(pin2, Pin.OUT))
         self.stepper_pins.append(Pin(pin3, Pin.OUT))
         self.stepper_pins.append(Pin(pin4, Pin.OUT))
 
-
     # full-step con 2 bobbine attive per ogni step
     # due bobbine accese per ogni step -> più coppia
-    #il valore (0=spento, 1=acceso) da dare a quel pin nel passo corrente.
+    # il valore (0=spento, 1=acceso) da dare a quel pin nel passo corrente.
     step_sequence = [
         [1, 0, 0, 1],
         [1, 1, 0, 0],
@@ -116,49 +123,52 @@ class StepMotor:
         [0, 0, 1, 1],
     ]
 
-    #la half-step corrispondente (8 stati) è questa:
+    # la half-step corrispondente (8 stati) è questa:
     # Half-step (mezzo passo): alterna 1 bobina e 2 bobine
     # Ordine pin: [IN1, IN2, IN3, IN4]
     step_sequence_half = [
-        [1,0,0,0],  # solo IN1
-        [1,0,0,1],  # IN1+IN4
-        [0,0,0,1],  # solo IN4
-        [0,0,1,1],  # IN3+IN4
-        [0,0,1,0],  # solo IN3
-        [0,1,1,0],  # IN2+IN3
-        [0,1,0,0],  # solo IN2
-        [1,1,0,0],  # IN1+IN2
+        [1, 0, 0, 0],  # solo IN1
+        [1, 0, 0, 1],  # IN1+IN4
+        [0, 0, 0, 1],  # solo IN4
+        [0, 0, 1, 1],  # IN3+IN4
+        [0, 0, 1, 0],  # solo IN3
+        [0, 1, 1, 0],  # IN2+IN3
+        [0, 1, 0, 0],  # solo IN2
+        [1, 1, 0, 0],  # IN1+IN2
     ]
 
-    #direction = +1 (antiorario), -1 (orario)
-    #steps = numero di passi da eseguire
-    #delay = tempo tra un passo e l'altro
-    #step_index tiene traccia della posizione corrente nella sequenza di attivazione (fase) del motore.
+    # direction = +1 (antiorario), -1 (orario)
+    # steps = numero di passi da eseguire
+    # delay = tempo tra un passo e l'altro
+    # step_index tiene traccia della posizione corrente nella sequenza di attivazione (fase) del motore.
 
     def step(self, direction, steps, delay):
-        step_index=0
+        step_index = 0
         for i in range(steps):
             # l'operatore % garantisce che step_index rimanga all'interno dell'intervallo valido (in questo caso [0-3]),
             # assicurando che la sequenza dei passi venga ripetuta ciclicamente.
             # indica la riga quindi quale passo
-            step_index = (step_index + direction) % len(self.step_sequence) # se la sequenza ha 4 stati è come fare mod 4
+            step_index = (step_index + direction) % len(
+                self.step_sequence
+            )  # se la sequenza ha 4 stati è come fare mod 4
 
-            #pin_index determina la colonna (quindi la bobbina)
+            # pin_index determina la colonna (quindi la bobbina)
             for pin_index in range(len(self.stepper_pins)):
-                #Esempio: se step_index = 2, la sequenza è [0, 1, 1, 0]
+                # Esempio: se step_index = 2, la sequenza è [0, 1, 1, 0]
                 # Se pin_index = 0 → pin_value = 0
                 # Se pin_index = 1 → pin_value = 1
                 # Se pin_index = 2 → pin_value = 1
                 # Se pin_index = 3 → pin_value = 0
                 pin_value = self.step_sequence[step_index][pin_index]
-                #Scrive il valore sul pin fisico, accendendo o spegnendo la bobina
+                # Scrive il valore sul pin fisico, accendendo o spegnendo la bobina
                 self.stepper_pins[pin_index].value(pin_value)
 
-            #Aspetta il tempo delay prima di passare al prossimo passo.
-            #Pausa più corta → motore più veloce. Pausa più lunga → motore più lento.
+            # Aspetta il tempo delay prima di passare al prossimo passo.
+            # Pausa più corta → motore più veloce. Pausa più lunga → motore più lento.
             utime.sleep(delay)
 
-class EchoDistance():
+
+class EchoDistance:
     SOUND_SPEED = 0.0343
 
     def __init__(self, trigger_pin, echo_pin):
@@ -186,6 +196,7 @@ class EchoDistance():
 
         return (durata * EchoDistance.SOUND_SPEED) / 2
 
+
 class WaterPump:
     def __init__(self, relay):
         self.relay = Pin(relay, Pin.OUT)
@@ -203,24 +214,21 @@ class WaterPump:
         self.relay.value(not self.relay.value())
 
 
-
-
-
 class Buzzer:
     def __init__(self, buzzer_pin):
         self.buzzer = PWM(Pin(buzzer_pin))
         self.buzzer.duty(0)  # spento all'avvio
 
         # --- NOTE ---
-        self.NOTE_C5  = 523
-        self.NOTE_D5  = 587
-        self.NOTE_E5  = 659
-        self.NOTE_F5  = 698
-        self.NOTE_G5  = 784
+        self.NOTE_C5 = 523
+        self.NOTE_D5 = 587
+        self.NOTE_E5 = 659
+        self.NOTE_F5 = 698
+        self.NOTE_G5 = 784
         self.NOTE_B5 = 988
         self.NOTE_A5 = 880
-        self.NOTE_FS5 = 740   # F#
-        self.NOTE_AS5 = 932   # A#
+        self.NOTE_FS5 = 740  # F#
+        self.NOTE_AS5 = 932  # A#
 
         self.NOTE_B4 = 494
         self.NOTE_G4 = 392
@@ -228,69 +236,204 @@ class Buzzer:
 
         self.NOTE_D6 = 1175
         self.NOTE_C6 = 1047
-        self.NOTE_E6  = 1319
-
-
+        self.NOTE_E6 = 1319
 
         # --- MELODIA JINGLE BELLS ---
         self.melody1 = [
-            self.NOTE_E5, self.NOTE_E5, self.NOTE_E5,
-            self.NOTE_E5, self.NOTE_E5, self.NOTE_E5,
-            self.NOTE_E5, self.NOTE_G5, self.NOTE_C5, self.NOTE_D5,
             self.NOTE_E5,
-            self.NOTE_F5, self.NOTE_F5, self.NOTE_F5, self.NOTE_F5,
-            self.NOTE_F5, self.NOTE_E5, self.NOTE_E5, self.NOTE_E5, self.NOTE_E5,
-            self.NOTE_E5, self.NOTE_D5, self.NOTE_D5, self.NOTE_E5,
-            self.NOTE_D5, self.NOTE_G5
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_G5,
+            self.NOTE_C5,
+            self.NOTE_D5,
+            self.NOTE_E5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_D5,
+            self.NOTE_D5,
+            self.NOTE_E5,
+            self.NOTE_D5,
+            self.NOTE_G5,
         ]
 
         self.durations1 = [
-            8, 8, 4,
-            8, 8, 4,
-            8, 8, 8, 8,
+            8,
+            8,
+            4,
+            8,
+            8,
+            4,
+            8,
+            8,
+            8,
+            8,
             2,
-            8, 8, 8, 8,
-            8, 8, 8, 16, 16,
-            8, 8, 8, 8,
-            4, 4
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            16,
+            16,
+            8,
+            8,
+            8,
+            8,
+            4,
+            4,
         ]
 
-
-         # --- MELODIA WE WISH YOU A MERRY CHRISTMAS ---
+        # --- MELODIA WE WISH YOU A MERRY CHRISTMAS ---
         self.melody2 = [
-            self.NOTE_D5, self.NOTE_G5, self.NOTE_G5, self.NOTE_A5, self.NOTE_G5, self.NOTE_FS5, self.NOTE_E5,
-            self.NOTE_E5, self.NOTE_E5, self.NOTE_A5, self.NOTE_A5, self.NOTE_B5, self.NOTE_A5, self.NOTE_G5,
-            self.NOTE_FS5, self.NOTE_D5, self.NOTE_D5, self.NOTE_B5, self.NOTE_B5, self.NOTE_C6, self.NOTE_B5,
-            self.NOTE_A5, self.NOTE_G5, self.NOTE_E5, self.NOTE_D5, self.NOTE_E5, self.NOTE_A5, self.NOTE_FS5,
+            self.NOTE_D5,
+            self.NOTE_G5,
+            self.NOTE_G5,
+            self.NOTE_A5,
+            self.NOTE_G5,
+            self.NOTE_FS5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_A5,
+            self.NOTE_A5,
+            self.NOTE_B5,
+            self.NOTE_A5,
+            self.NOTE_G5,
+            self.NOTE_FS5,
+            self.NOTE_D5,
+            self.NOTE_D5,
+            self.NOTE_B5,
+            self.NOTE_B5,
+            self.NOTE_C6,
+            self.NOTE_B5,
+            self.NOTE_A5,
+            self.NOTE_G5,
+            self.NOTE_E5,
+            self.NOTE_D5,
+            self.NOTE_E5,
+            self.NOTE_A5,
+            self.NOTE_FS5,
             self.NOTE_G5,
         ]
 
         self.durations2 = [
-            4,4,8,8,8,8,4,
-            4,4,4,8,8,8,8,
-            4,4,4,4,8,8,
-            8,8,4,4,4,4,4,4,2
+            4,
+            4,
+            8,
+            8,
+            8,
+            8,
+            4,
+            4,
+            4,
+            4,
+            8,
+            8,
+            8,
+            8,
+            4,
+            4,
+            4,
+            4,
+            8,
+            8,
+            8,
+            8,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            2,
         ]
-
 
         # --- MELODIA LET IT SNOW ---
         self.melody3 = [
-            self.NOTE_C5, self.NOTE_C5, self.NOTE_C6, self.NOTE_C6, self.NOTE_AS5, self.NOTE_A5, self.NOTE_G5, self.NOTE_F5,
-            self.NOTE_C5, self.NOTE_C5, self.NOTE_C5, self.NOTE_G5, self.NOTE_F5, self.NOTE_G5, self.NOTE_F5, self.NOTE_E5,
-            self.NOTE_C5, self.NOTE_D5, self.NOTE_D6, self.NOTE_D6, self.NOTE_C6, self.NOTE_AS5, self.NOTE_A5, self.NOTE_G5,
-            self.NOTE_E6, self.NOTE_D6, self.NOTE_C6, self.NOTE_C6, self.NOTE_AS5, self.NOTE_A5, self.NOTE_A5, self.NOTE_G5,
+            self.NOTE_C5,
+            self.NOTE_C5,
+            self.NOTE_C6,
+            self.NOTE_C6,
+            self.NOTE_AS5,
+            self.NOTE_A5,
+            self.NOTE_G5,
+            self.NOTE_F5,
+            self.NOTE_C5,
+            self.NOTE_C5,
+            self.NOTE_C5,
+            self.NOTE_G5,
+            self.NOTE_F5,
+            self.NOTE_G5,
+            self.NOTE_F5,
+            self.NOTE_E5,
+            self.NOTE_C5,
+            self.NOTE_D5,
+            self.NOTE_D6,
+            self.NOTE_D6,
+            self.NOTE_C6,
+            self.NOTE_AS5,
+            self.NOTE_A5,
+            self.NOTE_G5,
+            self.NOTE_E6,
+            self.NOTE_D6,
+            self.NOTE_C6,
+            self.NOTE_C6,
+            self.NOTE_AS5,
+            self.NOTE_A5,
+            self.NOTE_A5,
+            self.NOTE_G5,
             self.NOTE_F5,
         ]
 
         self.durations3 = [
-            8,8,8,8,4,4,8,4,
-            2,8,8,4,4,4,8,4,
-            2,4,8,8,4,4,8,2,
-            4,16,4,8,16,4,8,16,
+            8,
+            8,
+            8,
+            8,
+            4,
+            4,
+            8,
+            4,
+            2,
+            8,
+            8,
+            4,
+            4,
+            4,
+            8,
+            4,
+            2,
+            4,
+            8,
+            8,
+            4,
+            4,
+            8,
+            2,
+            4,
+            16,
+            4,
+            8,
+            16,
+            4,
+            8,
+            16,
             2,
         ]
-
-
 
     def _play(self, melody, durations):
         for i in range(len(melody)):
@@ -304,28 +447,23 @@ class Buzzer:
             self.buzzer.duty(0)
             utime.sleep_ms(int(duration * 0.6))
 
-
-
     def play_jb(self):
         self._play(self.melody1, self.durations1)
-
 
     def play_wwmc(self):
         self._play(self.melody2, self.durations2)
 
-
     def play_lis(self):
         self._play(self.melody3, self.durations3)
-
 
     def stop(self):
         self.buzzer.duty(0)
         self.buzzer.deinit()
 
 
-#buzzer = Buzzer(14)
+# buzzer = Buzzer(14)
 #
-#try:
+# try:
 #    while True:
 #        buzzer.play_jb()
 #        time.sleep(2)
@@ -333,6 +471,6 @@ class Buzzer:
 #        time.sleep(2)
 #        buzzer.play_lis()
 #
-#except KeyboardInterrupt:
+# except KeyboardInterrupt:
 #    buzzer.stop()
 #    print("Musica interrotta")

@@ -1,9 +1,10 @@
 import machine
+import utime
 from dht import DHT22
-from machine import PWM, Pin
+from machine import DAC, PWM, Pin
 from utime import sleep
 
-from sensors import LDR, Button, DirtMoisture, EchoDistance, WaterPump
+from sensors import LDR, Button, Buzzer, DirtMoisture, EchoDistance, Led, WaterPump
 
 # Max velocità dell'EchoDistance: 2 secondi
 
@@ -18,7 +19,10 @@ class SensorManager:
         self.dht = DHT22(Pin(23))
         self.pump = WaterPump(33)
         self.ldr = LDR(35)
-        self.buzzer = PWM(Pin(14, Pin.OUT), freq=400, duty_u16=0)
+        self.buzzer = Buzzer(14)
+
+        self.red_led_strip = Pin(25, Pin.OUT)
+        self.blue_led_strip = Pin(26, Pin.OUT)
 
         def press(b):
             machine.reset()
@@ -27,11 +31,9 @@ class SensorManager:
 
         self.sensor_data = {}
 
-        # schermo oled: pin_digitalout, pin_digitalout
-
     def tank_level(self):
         MIN_DISTANCE = 4  # 4cm è il limite inferiore di lettura del sensore a ultrasuoni (serbatoio pieno)
-        MAX_DISTANCE = 15  # 15cm è l'altezza del serbatoio (serbatoio vuoto)
+        MAX_DISTANCE = 17  # 15cm è l'altezza del serbatoio (serbatoio vuoto)
         distance = self.echo.measure()
 
         percentage = (MAX_DISTANCE - distance) / (MAX_DISTANCE - MIN_DISTANCE) * 100

@@ -25,13 +25,22 @@ class MQTTManager:
     COMMAND_TOPIC = MACRO_TOPIC + "cmd"
 
     def subCallback(self, topic, msg):
-        print(topic, msg)
+        print("Received message: ", topic, msg)
 
     def update_thread(self):
         while True:
-            self.client.wait_msg()
+            try:
+                self.client.wait_msg()
+            except OSError:
+                print("MQTT connection lost, reconnecting...")
+                try:
+                    self.client.disconnect()
+                except:
+                    pass
+                utime.sleep(2)
+                reconnect()
 
-    def __init__(self, display):
+    def __init__(self, display, sensors):
         sta_if = network.WLAN(network.STA_IF)
 
         sta_if.active(True)

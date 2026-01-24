@@ -32,7 +32,7 @@ class DisplayManager:
     _hum_width = 0
     _moist_width = 0
     _temp_width = 0
-    _song_name = "Last Christmas"
+    _song_name = "Let it Snow"
 
     # Inizializziamo gli offset casuali per lo spettrogramma
     _offsets = [random.randint(3, 8) for _ in range(9)]
@@ -147,11 +147,11 @@ class DisplayManager:
         self.draw_wifi_strength()
 
     # Visualizza e prepara la prossima pagina
-    def next_page(self):
+    def set_page(self, index):
         self.clear_page()
 
         # wrapping al termine delle pagine
-        self._current_page = (self._current_page + 1) % len(self._pages)
+        self._current_page = index
 
         # chiamata del setup della nuova pagina
         self._pages[self._current_page][0]()
