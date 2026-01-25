@@ -6,7 +6,7 @@ import ssd1306
 import utime
 from machine import I2C, Pin
 
-from utils import localtime_italy, text_width
+from utils import localtime_italy, music, text_width
 
 
 class DisplayManager:
@@ -25,14 +25,12 @@ class DisplayManager:
     DIRT_MOISTURE_LABEL_WIDTH = text_width(DIRT_MOISTURE_LABEL)
     TEMPERATURE_LABEL_WIDTH = text_width(TEMPERATURE_LABEL)
 
-    _current_page = -1
-
     # Dimensione delle stringhe scritte nello scorso rendering della
     # pagina di statistiche così da permettere un clear localizzato della superficie oled
     _hum_width = 0
     _moist_width = 0
     _temp_width = 0
-    _song_name = "Let it Snow"
+    _song_name = ""
 
     # Inizializziamo gli offset casuali per lo spettrogramma
     _offsets = [random.randint(3, 8) for _ in range(9)]
@@ -146,6 +144,10 @@ class DisplayManager:
         # Tacche del wifi
         self.draw_wifi_strength()
 
+    def setup_music(self, music_idx):
+        self._song_name = music[music_idx][0]
+        self._song_length = music[music_idx][1]
+
     # Visualizza e prepara la prossima pagina
     def set_page(self, index):
         self.clear_page()
@@ -248,6 +250,8 @@ class DisplayManager:
                 # pulizia
                 self.oled.rect(111, by - BAR_H + 1, BAR_W, BAR_H, 0, True)
 
+        utime.sleep(2)
+
     # Finto spettrogramma
     def draw_bars(self):
         self.oled.rect(47, 17, 79, 29, 0, True)  # pulizia sezione dello spettrogramma
@@ -309,4 +313,8 @@ class DisplayManager:
         # punto di riproduzione
         # self.oled.ellipse(10 + self._play_step, 58, 2, 2, 1, True)
         self.oled.line(8 + self._play_step, 56, 8 + self._play_step, 60, 1)
-        self._play_step = min(111, self._play_step + 1)
+
+        if self._play_step:
+            self._play_step = min(111, self._play_step + 1)
+
+        utime.sleep(0.1)

@@ -200,24 +200,28 @@ class EchoDistance:
 class WaterPump:
     def __init__(self, relay):
         self.relay = Pin(relay, Pin.OUT)
-        self.off()
+        self._off()
 
     # Il segnale di enable funziona al contrario.
     # La pompa è spenta per segnali alti sul pin.
-    def on(self):
+    def _on(self):
         self.relay.off()
 
-    def off(self):
+    def _off(self):
         self.relay.on()
 
-    def toggle(self):
+    def _toggle(self):
         self.relay.value(not self.relay.value())
+
+    def activate(self):
+        self._on()
+        utime.sleep(2)
+        self._off()
 
 
 class Buzzer:
     def __init__(self, buzzer_pin):
-        self.buzzer = PWM(Pin(buzzer_pin))
-        self.buzzer.duty(0)  # spento all'avvio
+        self.buzzer = PWM(Pin(buzzer_pin), freq=1, duty_u16=0)  # spento all'avvio
 
         # --- NOTE ---
         self.NOTE_C5 = 523
@@ -266,9 +270,61 @@ class Buzzer:
             self.NOTE_E5,
             self.NOTE_D5,
             self.NOTE_G5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_G5,
+            self.NOTE_C5,
+            self.NOTE_D5,
+            self.NOTE_E5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_F5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_E5,
+            self.NOTE_D5,
+            self.NOTE_D5,
+            self.NOTE_E5,
+            self.NOTE_D5,
+            self.NOTE_G5,
         ]
 
         self.durations1 = [
+            8,
+            8,
+            4,
+            8,
+            8,
+            4,
+            8,
+            8,
+            8,
+            8,
+            2,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            16,
+            16,
+            8,
+            8,
+            8,
+            8,
+            4,
+            4,
             8,
             8,
             4,
@@ -427,10 +483,10 @@ class Buzzer:
             4,
             16,
             4,
-            8,
+            4,
             16,
             4,
-            8,
+            4,
             16,
             2,
         ]
@@ -458,19 +514,3 @@ class Buzzer:
 
     def stop(self):
         self.buzzer.duty(0)
-        self.buzzer.deinit()
-
-
-# buzzer = Buzzer(14)
-#
-# try:
-#    while True:
-#        buzzer.play_jb()
-#        time.sleep(2)
-#        buzzer.play_wwmc()
-#        time.sleep(2)
-#        buzzer.play_lis()
-#
-# except KeyboardInterrupt:
-#    buzzer.stop()
-#    print("Musica interrotta")

@@ -17,3 +17,10 @@ def localtime_italy_str():
 # Helper per ottenere le dimensioni sullo schermo del testo.
 def text_width(text):
     return len(text) * 8
+
+
+music = [
+    ("Jingle Bells", 12800),
+    ("WWY a Merry Christmas", 9600),
+    ("Let It Snow", 11700),
+]
