@@ -196,7 +196,7 @@ class DisplayManager:
     def draw_stats_data(self):
         pallinoGradi_bits = bytearray(b"@\xa0@")
 
-        sensor_data = self._sensor_manager.sensor_data
+        sensor_data = self._sensor_manager.get_sensor_data()
 
         # Percentuale umidità dell'aria
         hum_str = f"{sensor_data['air_humidity']:.3g}%"

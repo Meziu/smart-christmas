@@ -22,26 +22,17 @@ class SmartChristmas:
         self.display.draw_header()
         # self.display.draw_stats_page()
         # self.display.draw_music_page()
-        self.display.set_page(0)
+        self.display.set_page(1)
 
         self.sensors.tree_lights.on()
-        self.sensors.buzzer.play_jb()
+        # self.sensors._buzzer.play_jb()
         # self.sensors.buzzer.play_wwmc()
         # self.sensors.buzzer.play_lis()
 
         while True:
-            self.sensors.read_sensors()
-            self.mqtt.upload_sensor_data(self.sensors.sensor_data)
-            print(self.sensors.sensor_data)
-
             self.display.update_page()
 
-            # self.display.draw_stats_data(self.sensors.sensor_data)
+            # self.display.draw_stats_data(data)
             # self.display.draw_music_update()
-
-            # Quando il livello di umidità del terreno scende sotto il threshold
-            if self.sensors.should_activate_pump():
-                print("Pump activated")
-                self.sensors.pump.activate()
 
             self.display.oled.show()

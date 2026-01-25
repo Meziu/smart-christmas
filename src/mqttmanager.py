@@ -42,13 +42,13 @@ class MQTTManager:
     def wateringlevel_callback(self, msg):
         try:
             v = int(msg)
-            self.sensors.moisture_low_level = v
+            self.sensors.set_moisture_low_level(v)
         except (ValueError, TypeError):
             return
 
     def pumpactivation_callback(self, msg):
         if msg == b"act":
-            self.sensors.must_activate_pump = True
+            self.sensors.activate_pump()
 
     def music_callback(self, msg):
         try:
@@ -63,7 +63,13 @@ class MQTTManager:
     def update_thread(self):
         while True:
             try:
-                self.client.wait_msg()
+                self.client.check_msg()
+
+                data = self.sensors.get_sensor_data()
+                self.upload_sensor_data(data)
+                print(data)
+
+                utime.sleep(2)
             except OSError as e:
                 print("Errore nell'attesa di un messaggio MQTT:", e)
                 self.client.disconnect()

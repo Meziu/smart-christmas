@@ -76,10 +76,7 @@ class DirtMoisture(GenericADCReader):
         self.power_pin.on()
 
     def read(self):
-        self.power_pin.on()
-        utime.sleep(0.8)
         v = super().read()
-        self.power_pin.off()
 
         return v
 
