@@ -28,10 +28,10 @@ class SensorManager:
         except OSError as _:
             machine.reset()
 
-        self.red_led_strip = Pin(25, Pin.OUT)
-        self.blue_led_strip = Pin(26, Pin.OUT)
-        self.red_led_strip.on()
-        self.blue_led_strip.on()
+        self._green_led_strip = Pin(25, Pin.OUT)
+        self._blue_led_strip = Pin(26, Pin.OUT)
+        self._green_led_strip.on()
+        self._blue_led_strip.on()
 
         self.tree_lights = Led(19, on_duty=512)
         self.tree_lights.off()
@@ -81,6 +81,10 @@ class SensorManager:
         self._sensor_data["soil_moisture"] = round(self._dirtmoisture.value(), 1)
         self._sensor_data["light_level"] = round(self._ldr.value(), 1)
         self._sensor_data["tank_level"] = round(self._tank_level(), 1)
+
+    def led_green(self):
+        self._green_led_strip.off()
+        self._blue_led_strip.off()
 
     def get_sensor_data(self):
         self._lock.acquire()

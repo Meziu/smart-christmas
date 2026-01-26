@@ -58,7 +58,6 @@ class MQTTManager:
 
             if self.sensors.play_music(v):
                 self.display.setup_music(v)
-                self.display.set_page(self.display.PAGE_MUSIC)
 
         except (ValueError, TypeError):
             return
@@ -67,6 +66,7 @@ class MQTTManager:
         while True:
             try:
                 self.client.check_msg()
+                print("mqtt loop")
 
                 data = self.sensors.get_new_sensor_data()
                 if data is not None:

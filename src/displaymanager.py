@@ -148,6 +148,8 @@ class DisplayManager:
         self._song_name = music_info[music_idx][0]
         self._song_length = music_info[music_idx][1]
 
+        self.set_page(self.PAGE_MUSIC)
+
     # Visualizza e prepara la prossima pagina
     def set_page(self, index):
         self.clear_page()
@@ -273,6 +275,8 @@ class DisplayManager:
 
         if not self._sensor_manager.is_playing_music():
             self.set_page(self.PAGE_STATS)
+            utime.sleep(0.1)
+            return
 
         for i in range(len(self._offsets)):
             # Scelta casuale di offset per il prossimo frame
