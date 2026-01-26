@@ -183,6 +183,9 @@ class EchoDistance:
         utime.sleep_us(10)
         self.trigger.off()
 
+        inizio = 0
+        fine = 0
+
         while self.echo.value() == 0:
             inizio = utime.ticks_us()
 
@@ -493,7 +496,7 @@ class Buzzer:
             note = melody[i]
             duration = int(1000 / durations[i])
 
-            self.buzzer.freq(melody[i])
+            self.buzzer.freq(note)
             self.buzzer.duty(700)
 
             utime.sleep_ms(duration)
@@ -511,3 +514,4 @@ class Buzzer:
 
     def stop(self):
         self.buzzer.duty(0)
+        self.buzzer.deinit()

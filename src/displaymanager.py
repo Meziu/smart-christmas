@@ -317,6 +317,7 @@ class DisplayManager:
         self._play_step += 1
 
         if self._play_step > 111:
+            self._sensor_manager.stop_music()
             self.set_page(0)
 
         utime.sleep(0.1)

@@ -3,8 +3,7 @@ import _thread
 import machine
 import utime
 from dht import DHT22
-from machine import DAC, PWM, Pin
-from utime import sleep
+from machine import Pin
 
 from sensors import LDR, Button, Buzzer, DirtMoisture, EchoDistance, Led, WaterPump
 
@@ -21,15 +20,14 @@ class SensorManager:
         self._dirtmoisture = DirtMoisture(34, 17)
         self._pump = WaterPump(33)
         self._ldr = LDR(35)
-        self.buzzer = Buzzer(14)
-
-        self._music = [self.buzzer.play_jb, self.buzzer.play_wwmc, self.buzzer.play_lis]
+        self._buzzer = None
+        self._music = []
 
         # A volte il DHT ha timeout al collegamento.
         # Nel caso non ci si riesca a collegare, si ritenta l'avvio.
         try:
             self._dht = DHT22(Pin(23))
-        except OSError as e:
+        except OSError as _:
             machine.reset()
 
         self.red_led_strip = Pin(25, Pin.OUT)
@@ -40,8 +38,8 @@ class SensorManager:
         self.tree_lights = Led(19, on_duty=512)
         self.tree_lights.off()
 
+        self._is_playing = False
         self._data_available = False
-
         self._must_activate_pump = False
         self._moisture_low_level = 30  # umidità del terreno troppo bassa sotto al 30%
 
@@ -166,5 +164,42 @@ class SensorManager:
             self._dirtmoisture.power_pin.on()
             utime.sleep(1)
 
+    def _init_buzzer(self):
+        self._buzzer = Buzzer(14)
+
+        self._music = [
+            self._buzzer.play_jb,
+            self._buzzer.play_wwmc,
+            self._buzzer.play_lis,
+        ]
+
+    # Restituisce True se la riproduzione è iniziata con successo,
+    # False altrimenti.
     def play_music(self, idx):
-        self._music[idx]()
+        self._lock.acquire()
+
+        if self._is_playing:
+            self._lock.release()
+            return False
+
+        self._is_playing = True
+
+        if self._buzzer is None:
+            self._init_buzzer()
+            self._music[idx]()
+
+        self._lock.release()
+
+        return True
+
+    def stop_music(self):
+        self._lock.acquire()
+
+        self._is_playing = False
+
+        if self._buzzer is not None:
+            self._buzzer.stop()
+            self._buzzer = None
+            self._music = []
+
+        self._lock.release()

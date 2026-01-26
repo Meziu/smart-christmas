@@ -55,9 +55,11 @@ class MQTTManager:
             v = int(msg)
             if v < 0 or v > 2:
                 raise ValueError()
-            self.display.setup_music(v)
-            self.sensors.play_music(v)
-            self.display.set_page(1)
+
+            if self.sensors.play_music(v):
+                self.display.setup_music(v)
+                self.display.set_page(1)
+
         except (ValueError, TypeError):
             return
 
