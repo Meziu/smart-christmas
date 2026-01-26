@@ -58,7 +58,7 @@ class SensorManager:
 
     def _tank_level(self):
         MIN_DISTANCE = 4  # 4cm è il limite inferiore di lettura del sensore a ultrasuoni (serbatoio pieno)
-        MAX_DISTANCE = 17  # 15cm è l'altezza del serbatoio (serbatoio vuoto)
+        MAX_DISTANCE = 16  # 16 cm è l'altezza del serbatoio (serbatoio vuoto)
         distance = self._echo.measure()
 
         percentage = (MAX_DISTANCE - distance) / (MAX_DISTANCE - MIN_DISTANCE) * 100
@@ -75,6 +75,8 @@ class SensorManager:
             utime.sleep(2)
             self._dht = DHT22(Pin(23))
             return
+
+        print("ECHO DISTANCE:", self._echo.measure())
 
         self._sensor_data["air_temperature"] = round(self._dht.temperature(), 1)
         self._sensor_data["air_humidity"] = round(self._dht.humidity(), 1)
