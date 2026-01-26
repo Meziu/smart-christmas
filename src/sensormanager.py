@@ -40,6 +40,8 @@ class SensorManager:
         self.tree_lights = Led(19, on_duty=512)
         self.tree_lights.off()
 
+        self._data_available = False
+
         self._must_activate_pump = False
         self._moisture_low_level = 30  # umidità del terreno troppo bassa sotto al 30%
 
@@ -93,6 +95,23 @@ class SensorManager:
 
         return d
 
+    def get_new_sensor_data(self):
+        self._lock.acquire()
+
+        # Si ritorna un valore solo se i dati non
+        # sono mai stati ottenuti tramite questa funzione.
+        # Utile per il sistema MQTT.
+        if not self._data_available:
+            return None
+
+        self._data_available = False
+
+        d = self._sensor_data.copy()
+
+        self._lock.release()
+
+        return d
+
     def activate_pump(self):
         self._lock.acquire()
 
@@ -128,6 +147,7 @@ class SensorManager:
             self._lock.acquire()
 
             self._read_sensors()
+            self._data_available = True
 
             # Quando il livello di umidità del terreno scende sotto il threshold
             if self._should_activate_pump():
@@ -136,10 +156,15 @@ class SensorManager:
 
             self._lock.release()
 
+            # Spegniamo il dirt moisture sensor per
+            # prevenire corrosione dei sensori.
             self._dirtmoisture.power_pin.off()
-            utime.sleep(2)
+            utime.sleep(4)
+
+            # Lasciamo il dirt moisture acceso per un secondo
+            # per avere una lettura stabile.
             self._dirtmoisture.power_pin.on()
-            utime.sleep(2)
+            utime.sleep(1)
 
     def play_music(self, idx):
         self._music[idx]()

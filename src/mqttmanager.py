@@ -66,9 +66,10 @@ class MQTTManager:
             try:
                 self.client.check_msg()
 
-                data = self.sensors.get_sensor_data()
-                self.upload_sensor_data(data)
-                print(data)
+                data = self.sensors.get_new_sensor_data()
+                if data is not None:
+                    self.upload_sensor_data(data)
+                    print(data)
 
                 utime.sleep(1)
                 self.client.check_msg()
