@@ -1,3 +1,5 @@
+import _thread
+
 import utime
 from machine import ADC, PWM, Pin
 
@@ -220,8 +222,17 @@ class WaterPump:
 
 
 class Buzzer:
+    def _init_buzzer(self):
+        self._buzzer = PWM(
+            Pin(self._buzzer_pin), freq=1000, duty_u16=0
+        )  # spento all'avvio
+
     def __init__(self, buzzer_pin):
-        self.buzzer = PWM(Pin(buzzer_pin), freq=1, duty_u16=0)  # spento all'avvio
+        self._buzzer_pin = buzzer_pin
+        self._init_buzzer()
+        self._lock = _thread.allocate_lock()
+        self._must_stop = False
+        self._is_playing = False
 
         # --- NOTE ---
         self.NOTE_C5 = 523
@@ -243,7 +254,7 @@ class Buzzer:
         self.NOTE_E6 = 1319
 
         # --- MELODIA JINGLE BELLS ---
-        self.melody1 = [
+        self._melody1 = [
             self.NOTE_E5,
             self.NOTE_E5,
             self.NOTE_E5,
@@ -298,7 +309,7 @@ class Buzzer:
             self.NOTE_G5,
         ]
 
-        self.durations1 = [
+        self._durations1 = [
             8,
             8,
             4,
@@ -354,7 +365,7 @@ class Buzzer:
         ]
 
         # --- MELODIA WE WISH YOU A MERRY CHRISTMAS ---
-        self.melody2 = [
+        self._melody2 = [
             self.NOTE_D5,
             self.NOTE_G5,
             self.NOTE_G5,
@@ -386,7 +397,7 @@ class Buzzer:
             self.NOTE_G5,
         ]
 
-        self.durations2 = [
+        self._durations2 = [
             4,
             4,
             8,
@@ -419,7 +430,7 @@ class Buzzer:
         ]
 
         # --- MELODIA LET IT SNOW ---
-        self.melody3 = [
+        self._melody3 = [
             self.NOTE_C5,
             self.NOTE_C5,
             self.NOTE_C6,
@@ -455,7 +466,7 @@ class Buzzer:
             self.NOTE_F5,
         ]
 
-        self.durations3 = [
+        self._durations3 = [
             8,
             8,
             8,
@@ -491,27 +502,63 @@ class Buzzer:
             2,
         ]
 
-    def _play(self, melody, durations):
+    def _play_thread(self, melody, durations):
         for i in range(len(melody)):
+            self._lock.acquire()
+
+            if self._must_stop:
+                self._stop()
+                self._lock.release()
+                return
+
             note = melody[i]
             duration = int(1000 / durations[i])
 
-            self.buzzer.freq(note)
-            self.buzzer.duty(700)
+            self._buzzer.freq(note)
+            self._buzzer.duty(700)
+
+            self._lock.release()
 
             utime.sleep_ms(duration)
-            self.buzzer.duty(0)
+            self._buzzer.duty(0)
             utime.sleep_ms(int(duration * 0.6))
 
+        self._lock.acquire()
+        self._stop()
+        self._lock.release()
+
+    def _play(self, melody, durations):
+        self._lock.acquire()
+
+        if self._is_playing:
+            print("Tried to play music while already playing.")
+            self._lock.release()
+            return
+
+        self._init_buzzer()
+        self._is_playing = True
+        _thread.start_new_thread(self._play_thread, (melody, durations))
+
+        self._lock.release()
+
     def play_jb(self):
-        self._play(self.melody1, self.durations1)
+        self._play(self._melody1, self._durations1)
 
     def play_wwmc(self):
-        self._play(self.melody2, self.durations2)
+        self._play(self._melody2, self._durations2)
 
     def play_lis(self):
-        self._play(self.melody3, self.durations3)
+        self._play(self._melody3, self._durations3)
+
+    def _stop(self):
+        self._buzzer.duty(0)
+        self._buzzer.deinit()
+        self._is_playing = False
+        self._must_stop = False
 
     def stop(self):
-        self.buzzer.duty(0)
-        self.buzzer.deinit()
+        self._lock.acquire()
+
+        self._must_stop = True
+
+        self._lock.release()

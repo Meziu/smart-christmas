@@ -7,8 +7,6 @@ from machine import Pin
 
 from sensors import LDR, Button, Buzzer, DirtMoisture, EchoDistance, Led, WaterPump
 
-# Max velocità dell'EchoDistance: 2 secondi
-
 
 class SensorManager:
     EMPTY_TANK_LEVEL = 10  # serbatoio considerato vuoto sotto al 10%
@@ -20,8 +18,8 @@ class SensorManager:
         self._dirtmoisture = DirtMoisture(34, 17)
         self._pump = WaterPump(33)
         self._ldr = LDR(35)
-        self._buzzer = None
-        self._music = []
+
+        self._init_buzzer()
 
         # A volte il DHT ha timeout al collegamento.
         # Nel caso non ci si riesca a collegare, si ritenta l'avvio.
@@ -100,6 +98,7 @@ class SensorManager:
         # sono mai stati ottenuti tramite questa funzione.
         # Utile per il sistema MQTT.
         if not self._data_available:
+            self._lock.release()
             return None
 
         self._data_available = False
@@ -113,18 +112,16 @@ class SensorManager:
     def activate_pump(self):
         self._lock.acquire()
 
-        try:
-            self._must_activate_pump = True
-        finally:
-            self._lock.release()
+        self._must_activate_pump = True
+
+        self._lock.release()
 
     def set_moisture_low_level(self, level):
         self._lock.acquire()
 
-        try:
-            self._moisture_low_level = level
-        finally:
-            self._lock.release()
+        self._moisture_low_level = level
+
+        self._lock.release()
 
     def _should_activate_pump(self):
         if self._must_activate_pump:
@@ -178,15 +175,11 @@ class SensorManager:
     def play_music(self, idx):
         self._lock.acquire()
 
-        if self._is_playing:
+        if self._buzzer._is_playing:
             self._lock.release()
             return False
 
-        self._is_playing = True
-
-        if self._buzzer is None:
-            self._init_buzzer()
-            self._music[idx]()
+        self._music[idx]()
 
         self._lock.release()
 
@@ -195,11 +188,15 @@ class SensorManager:
     def stop_music(self):
         self._lock.acquire()
 
-        self._is_playing = False
-
-        if self._buzzer is not None:
-            self._buzzer.stop()
-            self._buzzer = None
-            self._music = []
+        self._buzzer.stop()
 
         self._lock.release()
+
+    def is_playing_music(self):
+        self._lock.acquire()
+
+        f = self._buzzer._is_playing
+
+        self._lock.release()
+
+        return f

@@ -266,15 +266,13 @@ class DisplayManager:
     def draw_music_page(self):
         # Info di riproduzione
         self.oled.text(self._song_name, 9, 46, 1)
-        # linea lunga di riproduzione
-        self.oled.line(7, 58, 119, 58, 1)
-        # linee laterali delimitatrici
-        self.oled.line(7, 57, 7, 59, 1)
-        self.oled.line(120, 57, 120, 59, 1)
 
     def draw_music_update(self):
         MIN_O = 3
         MAX_O = 12
+
+        if not self._sensor_manager.is_playing_music():
+            self.set_page(self.PAGE_STATS)
 
         for i in range(len(self._offsets)):
             # Scelta casuale di offset per il prossimo frame
@@ -309,15 +307,5 @@ class DisplayManager:
                 self._offsets[i] = MAX_O
 
         self.draw_bars()
-
-        # punto di riproduzione
-        # self.oled.ellipse(10 + self._play_step, 58, 2, 2, 1, True)
-        self.oled.line(8 + self._play_step, 56, 8 + self._play_step, 60, 1)
-
-        self._play_step += 1
-
-        if self._play_step > 111:
-            self._sensor_manager.stop_music()
-            self.set_page(0)
 
         utime.sleep(0.1)
