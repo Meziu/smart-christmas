@@ -56,6 +56,7 @@ class MQTTManager:
             if v < 0 or v > 2:
                 raise ValueError()
             self.display.setup_music(v)
+            self.sensors.play_music(v)
             self.display.set_page(1)
         except (ValueError, TypeError):
             return
@@ -69,7 +70,9 @@ class MQTTManager:
                 self.upload_sensor_data(data)
                 print(data)
 
-                utime.sleep(2)
+                utime.sleep(1)
+                self.client.check_msg()
+                utime.sleep(1)
             except OSError as e:
                 print("Errore nell'attesa di un messaggio MQTT:", e)
                 self.client.disconnect()

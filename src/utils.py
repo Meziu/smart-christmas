@@ -19,8 +19,8 @@ def text_width(text):
     return len(text) * 8
 
 
-music = [
+music_info = [
     ("Jingle Bells", 12800),
-    ("WWY a Merry Christmas", 9600),
+    ("Merry Christmas", 9600),
     ("Let It Snow", 11700),
 ]

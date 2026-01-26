@@ -6,7 +6,7 @@ import ssd1306
 import utime
 from machine import I2C, Pin
 
-from utils import localtime_italy, music, text_width
+from utils import localtime_italy, music_info, text_width
 
 
 class DisplayManager:
@@ -145,8 +145,8 @@ class DisplayManager:
         self.draw_wifi_strength()
 
     def setup_music(self, music_idx):
-        self._song_name = music[music_idx][0]
-        self._song_length = music[music_idx][1]
+        self._song_name = music_info[music_idx][0]
+        self._song_length = music_info[music_idx][1]
 
     # Visualizza e prepara la prossima pagina
     def set_page(self, index):
@@ -314,7 +314,9 @@ class DisplayManager:
         # self.oled.ellipse(10 + self._play_step, 58, 2, 2, 1, True)
         self.oled.line(8 + self._play_step, 56, 8 + self._play_step, 60, 1)
 
-        if self._play_step:
-            self._play_step = min(111, self._play_step + 1)
+        self._play_step += 1
+
+        if self._play_step > 111:
+            self.set_page(0)
 
         utime.sleep(0.1)

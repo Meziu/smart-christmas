@@ -19,10 +19,18 @@ class SensorManager:
 
         self._echo = EchoDistance(5, 18)
         self._dirtmoisture = DirtMoisture(34, 17)
-        self._dht = DHT22(Pin(23))
         self._pump = WaterPump(33)
         self._ldr = LDR(35)
-        self._buzzer = Buzzer(14)
+        self.buzzer = Buzzer(14)
+
+        self._music = [self.buzzer.play_jb, self.buzzer.play_wwmc, self.buzzer.play_lis]
+
+        # A volte il DHT ha timeout al collegamento.
+        # Nel caso non ci si riesca a collegare, si ritenta l'avvio.
+        try:
+            self._dht = DHT22(Pin(23))
+        except OSError as e:
+            machine.reset()
 
         self.red_led_strip = Pin(25, Pin.OUT)
         self.blue_led_strip = Pin(26, Pin.OUT)
@@ -42,6 +50,12 @@ class SensorManager:
 
         self._sensor_data = {}
 
+        self._sensor_data["air_temperature"] = 0
+        self._sensor_data["air_humidity"] = 0
+        self._sensor_data["soil_moisture"] = 0
+        self._sensor_data["light_level"] = 0
+        self._sensor_data["tank_level"] = 0
+
         _thread.start_new_thread(self._sensor_thread, ())
 
     def _tank_level(self):
@@ -54,9 +68,15 @@ class SensorManager:
         return percentage
 
     def _read_sensors(self):
-        # Max velocità del DHT22: 2 secondi
-        # Il sensore di umidità del terreno attende comunque un secondo internamente
-        self._dht.measure()
+        try:
+            # Max velocità del DHT22: 2 secondi
+            # Il sensore di umidità del terreno attende comunque un secondo internamente
+            self._dht.measure()
+        except OSError as e:
+            print("Errore con DHT:", e)
+            utime.sleep(2)
+            self._dht = DHT22(Pin(23))
+            return
 
         self._sensor_data["air_temperature"] = round(self._dht.temperature(), 1)
         self._sensor_data["air_humidity"] = round(self._dht.humidity(), 1)
@@ -103,7 +123,7 @@ class SensorManager:
 
     def _sensor_thread(self):
         self._dirtmoisture.power_pin.on()
-        utime.sleep(0.3)
+        utime.sleep(2)
         while True:
             self._lock.acquire()
 
@@ -120,3 +140,6 @@ class SensorManager:
             utime.sleep(2)
             self._dirtmoisture.power_pin.on()
             utime.sleep(2)
+
+    def play_music(self, idx):
+        self._music[idx]()

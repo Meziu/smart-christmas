@@ -22,7 +22,7 @@ class SmartChristmas:
         self.display.draw_header()
         # self.display.draw_stats_page()
         # self.display.draw_music_page()
-        self.display.set_page(1)
+        self.display.set_page(0)
 
         self.sensors.tree_lights.on()
         # self.sensors._buzzer.play_jb()
