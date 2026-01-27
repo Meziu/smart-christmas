@@ -17,6 +17,7 @@ class MQTTManager:
 
     CLIENT_ID = "SCT1"
     BROKER = "test.mosquitto.org"
+    BROKER_PORT = 1883
     USER = None
     PASSWORD = None
 
@@ -66,16 +67,15 @@ class MQTTManager:
         while True:
             try:
                 self.client.check_msg()
-                print("mqtt loop")
 
                 data = self.sensors.get_new_sensor_data()
                 if data is not None:
                     self.upload_sensor_data(data)
                     print(data)
 
-                utime.sleep(1)
-                self.client.check_msg()
-                utime.sleep(1)
+                for _ in range(0, 20):
+                    utime.sleep(0.1)
+                    self.client.check_msg()
             except OSError as e:
                 print("Errore nell'attesa di un messaggio MQTT:", e)
                 self.client.disconnect()
@@ -121,8 +121,8 @@ class MQTTManager:
             self.BROKER,
             user=self.USER,
             password=self.PASSWORD,
-            port=1883,
-            keepalive=30,
+            port=self.BROKER_PORT,
+            keepalive=60,
             ssl=False,
         )
         self.client.set_callback(self.sub_callback)

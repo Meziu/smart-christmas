@@ -18,7 +18,7 @@ class SmartChristmas:
 
         utime.sleep(2)
 
-        self.sensors.led_green()
+        self.sensors.led_ok()
 
         self.display.clear()
         self.display.draw_header()

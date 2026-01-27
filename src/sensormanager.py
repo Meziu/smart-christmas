@@ -9,8 +9,6 @@ from sensors import LDR, Button, Buzzer, DirtMoisture, EchoDistance, Led, WaterP
 
 
 class SensorManager:
-    EMPTY_TANK_LEVEL = 10  # serbatoio considerato vuoto sotto al 10%
-
     def __init__(self):
         self._lock = _thread.allocate_lock()
 
@@ -42,6 +40,7 @@ class SensorManager:
         self._moisture_low_level = 30  # umidità del terreno troppo bassa sotto al 30%
 
         def press(b):
+            print("Reset button")
             machine.reset()
 
         self._reset_button = Button(12, press)
@@ -76,15 +75,15 @@ class SensorManager:
             self._dht = DHT22(Pin(23))
             return
 
-        print("ECHO DISTANCE:", self._echo.measure())
-
         self._sensor_data["air_temperature"] = round(self._dht.temperature(), 1)
         self._sensor_data["air_humidity"] = round(self._dht.humidity(), 1)
         self._sensor_data["soil_moisture"] = round(self._dirtmoisture.value(), 1)
         self._sensor_data["light_level"] = round(self._ldr.value(), 1)
         self._sensor_data["tank_level"] = round(self._tank_level(), 1)
 
-    def led_green(self):
+        self._data_available = True
+
+    def led_ok(self):
         self._green_led_strip.off()
         self._blue_led_strip.off()
 
@@ -148,7 +147,6 @@ class SensorManager:
             self._lock.acquire()
 
             self._read_sensors()
-            self._data_available = True
 
             # Quando il livello di umidità del terreno scende sotto il threshold
             if self._should_activate_pump():
